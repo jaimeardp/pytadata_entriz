@@ -2,14 +2,18 @@
 
 repos:
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    # Find the latest version on the Ruff pre-commit repository:
-    # https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.4 # Use the latest rev from the repo
+    # It's good practice to use the latest version.
+    # Check for the latest tag here: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.5 # Using a recent version as of May 2025
     hooks:
-        # Run the linter.
+        # 1. Run the linter using the 'check' subcommand.
+        #    This hook identifies and can automatically fix linting errors.
         -   id: ruff
-            args: [--fix]  # Automatically fix issues when possible
+            # The 'args' now explicitly show the subcommand being run.
+            args: ["check", "--fix", "--show-fixes"]
 
-        # Run the formatter.
+        # 2. Run the formatter using the 'format' subcommand.
+        #    This ensures consistent code style.
         -   id: ruff-format
-            args: [--check, --fix]  # Check formatting without making changes
+            # The 'args' here explicitly call the 'format' subcommand.
+            args: ["format"]
