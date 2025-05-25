@@ -1,0 +1,192 @@
+name: CI/CD Pipeline
+
+on:
+  # Run on every push and pull request
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  
+  # Run on new releases/tags
+  release:
+    types: [published]
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # QUALITY CHECKS & TESTING
+  # ──────────────────────────────────────────────────────────
+  quality:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+    
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root --with dev
+    
+    - name: Install project
+      run: poetry install --no-interaction
+    
+    - name: Run pre-commit hooks
+      run: |
+        poetry run pre-commit run --all-files --show-diff-on-failure
+    
+    - name: Run tests with coverage
+      run: |
+        poetry run pytest --cov=src/mardata_entryana --cov-report=xml --cov-report=term-missing -v
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: matrix.python-version == '3.11'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
+  # ──────────────────────────────────────────────────────────
+  # BUILD PACKAGE
+  # ──────────────────────────────────────────────────────────
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [quality, security]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Build package
+      run: poetry build
+    
+    - name: Check package
+      run: |
+        pip install twine
+        twine check dist/*
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist/
+        retention-days: 30
+
+  # ──────────────────────────────────────────────────────────
+  # PUBLISH TO TEST PYPI (on push to main)
+  # ──────────────────────────────────────────────────────────
+  publish-test:
+    name: Publish to TestPyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: test-publishing
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Configure Poetry for TestPyPI
+      run: |
+        poetry config repositories.testpypi https://test.pypi.org/legacy/
+        poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_TOKEN }}
+    
+    - name: Publish to TestPyPI
+      run: poetry publish -r testpypi
+    
+    - name: Test installation from TestPyPI
+      run: |
+        sleep 60  # Wait for package to be available
+        pip install -i https://test.pypi.org/simple/ --no-deps mardata-entryana
+        python -c "import mardata_entryana; print('✅ Package installed successfully')"
+
+  # ──────────────────────────────────────────────────────────
+  # PUBLISH TO PYPI (on release)
+  # ──────────────────────────────────────────────────────────
+  publish-prod:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Publish to PyPI
+      env:
+        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+      run: poetry publish
+    
+    - name: Create GitHub Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/*
+        generate_release_notes: true

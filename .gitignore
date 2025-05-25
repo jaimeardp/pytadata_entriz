@@ -28,3 +28,23 @@ coverage.xml
 *.cover
 # Translations
 *.mo
+
+# pytest cache directory
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+# Pyre type checker
+.pyre/
+# Pytype
+.pytype/
+# PyCharm
+.idea/
+# VS Code
+.vscode/
+# Jupyter Notebook
+.ipynb_checkpoints/
+# Ruff
+.ruff_cache/
+# Virtual environment
+venv/

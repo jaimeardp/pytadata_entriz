@@ -1,15 +1,15 @@
 from typing import Union
 
-from .common.file_readers_s3 import (  # Assuming you've kept the readers in a file named file_readers.py
+from .file_readers_s3 import (  # Assuming you've kept the readers in a file named file_readers.py
     CsvCloudFile,
     ExcelCloudFile,
-
 )
 
-from .common.file_readers_gcp import (  # Assuming you've kept the readers in a file named file_readers.py
+from .file_readers_gcp import (  # Assuming you've kept the readers in a file named file_readers.py
     CsvGCPFile,
     ExcelGCPFile,
 )
+
 
 class ObjectFactory:
     """
