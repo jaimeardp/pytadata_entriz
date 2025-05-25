@@ -1,0 +1,48 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  pull_request:        # any PR against any branch
+  push:                # direct pushes
+    branches: [ main, develop, feature/**, release/**, hotfix/** ]
+
+jobs:
+  test:
+    name: Lint + Tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: abatilo/actions-poetry@v3   # 1 click Poetry install
+        with:
+          poetry-version: "1.8.2"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry virtualenv + wheel cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            **/.venv
+          key: poetry-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: poetry-${{ runner.os }}-${{ matrix.python }}-
+
+      - name: Install project (+dev extras)
+        run: poetry install --no-interaction --no-root --with dev
+
+      - name: Ruff (lint & format check)
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check .
+
+      - name: Pytest
+        run: poetry run pytest -q
