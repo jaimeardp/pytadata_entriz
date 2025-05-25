@@ -54,6 +54,7 @@ ruff = "^0.11.11"
 
 
 # ───────────────────────────────────────────────────────── build backend
+pre-commit = "^4.2.0"
 [build-system]
 requires      = ["poetry-core>=1.8.0"]   # works with Poetry 1.8+ / 2.x
 build-backend = "poetry.core.masonry.api"
