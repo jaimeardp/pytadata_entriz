@@ -201,6 +201,7 @@ jobs:
         
         echo "🔍 Testing installation from TestPyPI..."
         pip install -i https://test.pypi.org/simple/ --no-deps pytadata_entriz==${{ env.DEV_VERSION }}
+        pip install pandas, pyarrow, typedframe
         
         echo "✅ Verifying package functionality..."
         python -c "import pytadata_entriz; print(f'✅ TestPyPI deployment verified!')"
