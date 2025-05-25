@@ -12,3 +12,4 @@ repos:
 
         # Run the formatter.
         -   id: ruff-format
+            args: [--check, --fix]  # Check formatting without making changes
