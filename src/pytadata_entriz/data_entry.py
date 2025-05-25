@@ -1,20 +1,24 @@
 """
 Public façade: one class that routes to the proper provider module.
 """
+
 from __future__ import annotations
 import pandas as pd
 from typing import Any
 
 from ._typing import (
-    Provider, WriteMode, JsonMapping, Kwargs,
+    Provider,
+    WriteMode,
+    JsonMapping,
+    Kwargs,
 )
 from ._detect import load_module
 from .providers import Backend
 from .common.logger import get_logger
 from .common.validator import SchemaDataValidator
 
+f = "ASD"
 
-f = 
 
 class DataEntry:
     """
@@ -26,7 +30,7 @@ class DataEntry:
         "aws", "gcp" or "auto" (default).  When "auto", the first installed
         backend wins (awswrangler before pandas-gbq).
     default_dest :
-        • AWS → an *S3 URI* “s3://bucket/prefix/”  
+        • AWS → an *S3 URI* “s3://bucket/prefix/”
         • GCP → “project.dataset.table”
     config :
         Mapping of provider-specific options that will be splashed into every
@@ -43,11 +47,10 @@ class DataEntry:
         config: Kwargs | None = None,
     ) -> None:
         mod = load_module(provider)
-        self._backend: Backend = mod                           # type: ignore[assignment]
+        self._backend: Backend = mod  # type: ignore[assignment]
         self._default_dest = default_dest
         self._config: Kwargs = dict(config or {})
         self.logger = get_logger(__name__)
-
 
     # ────────────────────────────────────────────────────────────────
     def read(
@@ -72,19 +75,19 @@ class DataEntry:
         if dest is None and self._default_dest is None:
             self.logger.error("Destination must be supplied (dest= or default_dest).")
             raise ValueError("Destination must be supplied (dest= or default_dest).")
-        
+
         self.logger.info(f"Reading data from {dest or self._default_dest}...")
-        
+
         return self._backend.read(
-            dest or self._default_dest,           # type: ignore[arg-type]
+            dest or self._default_dest,  # type: ignore[arg-type]
             columns=columns,
             validation=validation,
             **self._config,
             **extra,
         )
-    
+
     # ────────────────────────────────────────────────────────────────
-    
+
     def write(
         self,
         df: pd.DataFrame,
@@ -115,12 +118,12 @@ class DataEntry:
             raise ValueError("Destination must be supplied (dest= or default_dest).")
         self._backend.write(
             df,
-            dest=dest or self._default_dest,          # type: ignore[arg-type]
+            dest=dest or self._default_dest,  # type: ignore[arg-type]
             mode=mode,
             partition_cols=partition_cols,
             dtype=dtype,
-            **self._config,                           # from constructor
-            **extra,                                  # per-call
+            **self._config,  # from constructor
+            **extra,  # per-call
         )
 
     # ────────────────────────────────────────────────────────────────
@@ -134,16 +137,16 @@ class DataEntry:
         Return {column: bigquery_or_glue_type} mapping.
         """
         return self._backend.define_schema(df, camel_case=camel_case)
-    
+
     def validate(
         self,
         df: pd.DataFrame,
-        schema_csv_path: str = './local/schema.csv',
+        schema_csv_path: str = "./local/schema.csv",
         **kwargs: Any,
     ) -> pd.DataFrame:
         """
         Validate the DataFrame against the contract schema.
-        
+
         Parameters
         ----------
         df : pd.DataFrame
@@ -152,7 +155,7 @@ class DataEntry:
             Whether to perform validation (default is True).
         **kwargs : Any
             Additional keyword arguments for validation.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -167,5 +170,3 @@ class DataEntry:
         result_df = validator.run_validation_and_report()
 
         return result_df
-
-
