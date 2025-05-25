@@ -3,16 +3,13 @@ name: CI/CD Pipeline
 on:
   # Feature branches and develop - Quality checks only
   push:
-    branches: [ develop, 'feature/**', 'hotfix/**', 'release/**' ]
+    branches: [ main, develop, 'feature/**', 'hotfix/**', 'release/**' ]
   
   # Pull requests to develop and main
   pull_request:
     branches: [ develop, main ]
     types: [opened, synchronize, reopened, ready_for_review]
-  
-  # Main branch pushes (after PR merge)
-  push:
-    branches: [ main ]
+
   
   # Production releases
   release:
