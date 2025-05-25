@@ -17,8 +17,6 @@ from .providers import Backend
 from .common.logger import get_logger
 from .common.validator import SchemaDataValidator
 
-f = "ASD"
-
 
 class DataEntry:
     """
