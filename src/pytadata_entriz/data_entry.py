@@ -13,6 +13,9 @@ from .providers import Backend
 from .common.logger import get_logger
 from .common.validator import SchemaDataValidator
 
+
+f = 
+
 class DataEntry:
     """
     Write a **pandas.DataFrame** to the configured destination (S3 or BigQuery).
