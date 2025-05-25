@@ -1,5 +1,5 @@
 """
-mardata_entryana ― Uniform DataFrame writer for AWS or GCP back-ends.
+pytadata_entriz ― Uniform DataFrame writer for AWS or GCP back-ends.
 """
 from importlib.metadata import version as _v
 from .data_entry import DataEntry
