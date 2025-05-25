@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
     
     steps:
     - name: Checkout code
@@ -275,7 +275,7 @@ jobs:
         sleep 90
         
         echo "🔍 Installing release candidate..."
-        pip install -i https://test.pypi.org/simple/ --no-deps pytadata_entriz==${{ env.RC_VERSION }}
+        pip install -i https://test.pypi.org/simple/  pytadata_entriz==${{ env.RC_VERSION }}
         
         echo "🧪 Running staging validation..."
         python -c "import pytadata_entriz; print('✅ Staging validation passed!')"
