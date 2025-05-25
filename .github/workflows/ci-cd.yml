@@ -160,7 +160,7 @@ jobs:
       needs.quality-gate.result == 'success'
     environment: 
       name: test
-      url: https://test.pypi.org/project/mardata-entryana/
+      url: https://test.pypi.org/project/pytadata_entriz/
     
     steps:
     - name: Checkout code
@@ -200,7 +200,7 @@ jobs:
         sleep 90
         
         echo "🔍 Testing installation from TestPyPI..."
-        pip install -i https://test.pypi.org/simple/ --no-deps mardata-entryana==${{ env.DEV_VERSION }}
+        pip install -i https://test.pypi.org/simple/ --no-deps pytadata_entriz==${{ env.DEV_VERSION }}
         
         echo "✅ Verifying package functionality..."
         python -c "import pytadata_entriz; print(f'✅ TestPyPI deployment verified!')"
@@ -213,7 +213,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             commit_sha: context.sha,
-            body: `## 🚀 TestPyPI Deployment Summary\n\n**Status:** ✅ Successfully deployed\n**Version:** \`${{ env.DEV_VERSION }}\`\n**Environment:** Test\n**Branch:** \`develop\`\n\n### 📥 Installation\n\`\`\`bash\npip install -i https://test.pypi.org/simple/ mardata-entryana==${{ env.DEV_VERSION }}\n\`\`\`\n\n### 🧪 Quick Test\n\`\`\`python\nimport pytadata_entriz\nprint("Package loaded successfully!")\n\`\`\`\n\n### 🔗 Links\n- [TestPyPI Package](https://test.pypi.org/project/mardata-entryana/${{ env.DEV_VERSION }}/)\n- [Build Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n---\n*🤖 Automated deployment from develop branch*`
+            body: `## 🚀 TestPyPI Deployment Summary\n\n**Status:** ✅ Successfully deployed\n**Version:** \`${{ env.DEV_VERSION }}\`\n**Environment:** Test\n**Branch:** \`develop\`\n\n### 📥 Installation\n\`\`\`bash\npip install -i https://test.pypi.org/simple/ pytadata_entriz==${{ env.DEV_VERSION }}\n\`\`\`\n\n### 🧪 Quick Test\n\`\`\`python\nimport pytadata_entriz\nprint("Package loaded successfully!")\n\`\`\`\n\n### 🔗 Links\n- [TestPyPI Package](https://test.pypi.org/project/pytadata_entriz/${{ env.DEV_VERSION }}/)\n- [Build Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n---\n*🤖 Automated deployment from develop branch*`
           })
 
   # ──────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ jobs:
       needs.quality-gate.result == 'success'
     environment: 
       name: staging
-      url: https://test.pypi.org/project/mardata-entryana/
+      url: https://test.pypi.org/project/pytadata_entriz/
     
     steps:
     - name: Checkout code
@@ -275,7 +275,7 @@ jobs:
         sleep 90
         
         echo "🔍 Installing release candidate..."
-        pip install -i https://test.pypi.org/simple/ --no-deps mardata-entryana==${{ env.RC_VERSION }}
+        pip install -i https://test.pypi.org/simple/ --no-deps pytadata_entriz==${{ env.RC_VERSION }}
         
         echo "🧪 Running staging validation..."
         python -c "import pytadata_entriz; print('✅ Staging validation passed!')"
@@ -293,7 +293,7 @@ jobs:
       needs.quality-gate.result == 'success'
     environment: 
       name: production
-      url: https://pypi.org/project/mardata-entryana/
+      url: https://pypi.org/project/pytadata_entriz/
     
     steps:
     - name: Checkout release
@@ -356,7 +356,7 @@ jobs:
         sleep 180
         
         echo "🔍 Verifying production deployment..."
-        pip install mardata-entryana==${{ env.RELEASE_VERSION }}
+        pip install pytadata_entriz==${{ env.RELEASE_VERSION }}
         python -c "import pytadata_entriz; print(f'✅ Production release ${{ env.RELEASE_VERSION }} verified!')"
     
     - name: Update release with deployment info
@@ -369,7 +369,7 @@ jobs:
             release_id: context.payload.release.id
           });
           
-          const deploymentInfo = `\n\n---\n\n## 📦 Installation\n\n\`\`\`bash\npip install mardata-entryana==${{ env.RELEASE_VERSION }}\n\`\`\`\n\n## 🔗 Package Links\n\n- [PyPI Package](https://pypi.org/project/mardata-entryana/${{ env.RELEASE_VERSION }}/)\n- [Documentation](https://github.com/${{ github.repository }})\n- [Release Notes](https://github.com/${{ github.repository }}/releases/tag/v${{ env.RELEASE_VERSION }})\n\n## 📊 Deployment Details\n\n- **Version:** ${{ env.RELEASE_VERSION }}\n- **Build:** [${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n- **Deployed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")\n- **Python:** ${{ env.PYTHON_VERSION }}+\n\n*🤖 Automatically deployed via GitHub Actions*`;
+          const deploymentInfo = `\n\n---\n\n## 📦 Installation\n\n\`\`\`bash\npip install pytadata_entriz==${{ env.RELEASE_VERSION }}\n\`\`\`\n\n## 🔗 Package Links\n\n- [PyPI Package](https://pypi.org/project/pytadata_entriz/${{ env.RELEASE_VERSION }}/)\n- [Documentation](https://github.com/${{ github.repository }})\n- [Release Notes](https://github.com/${{ github.repository }}/releases/tag/v${{ env.RELEASE_VERSION }})\n\n## 📊 Deployment Details\n\n- **Version:** ${{ env.RELEASE_VERSION }}\n- **Build:** [${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n- **Deployed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")\n- **Python:** ${{ env.PYTHON_VERSION }}+\n\n*🤖 Automatically deployed via GitHub Actions*`;
           
           await github.rest.repos.updateRelease({
             owner: context.repo.owner,
