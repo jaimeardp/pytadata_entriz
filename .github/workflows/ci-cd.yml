@@ -422,15 +422,40 @@ jobs:
   # NOTIFICATION & CLEANUP
   # ──────────────────────────────────────────────────────────
   notify-deployment:
-    name: Deployment Notifications
+    name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [deploy-test, deploy-staging, deploy-production]
-    if: always()
+    needs: [deploy-testpypi, deploy-production]
+    if: always() && (needs.deploy-testpypi.result != 'skipped' || needs.deploy-production.result != 'skipped')
     
     steps:
     - name: Deployment summary
       run: |
-        echo "## 📊 Deployment Summary"
-        echo "- Test: ${{ needs.deploy-test.result || 'skipped' }}"
-        echo "- Staging: ${{ needs.deploy-staging.result || 'skipped' }}"
-        echo "- Production: ${{ needs.deploy-production.result || 'skipped' }}"
+        echo "## 📊 Pipeline Execution Summary"
+        echo ""
+        echo "### 🔍 Quality Gate"
+        echo "Status: ✅ Passed"
+        echo ""
+        echo "### 🧪 TestPyPI Deployment" 
+        if [ "${{ needs.deploy-testpypi.result }}" != "skipped" ]; then
+          echo "Status: ${{ needs.deploy-testpypi.result == 'success' && '✅ Success' || '❌ Failed' }}"
+          echo "Version: ${{ needs.deploy-testpypi.outputs.deployed-version || 'N/A' }}"
+          echo "Environment: ${{ needs.deploy-testpypi.outputs.environment || 'N/A' }}"
+        else
+          echo "Status: ⏭️ Skipped (not triggered)"
+        fi
+        echo ""
+        echo "### 🚀 Production Deployment"
+        if [ "${{ needs.deploy-production.result }}" != "skipped" ]; then
+          echo "Status: ${{ needs.deploy-production.result == 'success' && '✅ Success' || '❌ Failed' }}"
+        else
+          echo "Status: ⏭️ Skipped (not triggered)"
+        fi
+        echo ""
+        echo "### 📋 Pipeline Result"
+        if [ "${{ needs.deploy-testpypi.result }}" = "success" ] || [ "${{ needs.deploy-production.result }}" = "success" ]; then
+          echo "✅ Pipeline completed successfully"
+        elif [ "${{ needs.deploy-testpypi.result }}" = "failure" ] || [ "${{ needs.deploy-production.result }}" = "failure" ]; then
+          echo "❌ Pipeline completed with failures"
+        else
+          echo "ℹ️ Pipeline completed (no deployments triggered)"
+        fi
