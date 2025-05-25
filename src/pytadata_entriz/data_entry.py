@@ -145,6 +145,10 @@ class DataEntry:
         """
         Validate the DataFrame against the contract schema.
 
+
+
+
+
         Parameters
         ----------
         df : pd.DataFrame

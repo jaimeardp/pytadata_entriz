@@ -10,10 +10,8 @@ repos:
         #    This hook identifies and can automatically fix linting errors.
         -   id: ruff
             # The 'args' now explicitly show the subcommand being run.
-            args: ["check", "--fix", "--show-fixes"]
+            args: [--fix]
 
         # 2. Run the formatter using the 'format' subcommand.
         #    This ensures consistent code style.
         -   id: ruff-format
-            # The 'args' here explicitly call the 'format' subcommand.
-            args: ["format"]
