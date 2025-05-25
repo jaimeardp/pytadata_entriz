@@ -1,6 +1,7 @@
 """
 AWS implementation (awswrangler ≥3.7).
 """
+
 from __future__ import annotations
 import pandas as pd
 import awswrangler as wr
@@ -15,6 +16,7 @@ from typedframe import TypedDataFrame
 from .._typing import JsonMapping, Kwargs, WriteMode
 
 from ..common.logger import get_logger
+
 logger = get_logger(__name__)
 
 _S3_WRITE_MODES: dict[WriteMode, str] = {
@@ -37,19 +39,21 @@ def read(
 
     logger.info(f"Reading data from {dest} and {extra}...")
 
-
     logger.info(f"Reading data from local {dest}...")
 
-    reader_manager = _define_context(filepath=dest,\
-                            contract_definition=extra.get("contract_definition"),\
-                            pre_transformations=extra.get("pre_transformations", []),\
-                            post_transformations=extra.get("post_transformations", []),\
+    reader_manager = _define_context(
+        filepath=dest,
+        contract_definition=extra.get("contract_definition"),
+        pre_transformations=extra.get("pre_transformations", []),
+        post_transformations=extra.get("post_transformations", []),
     )
     data_cleaned_df = reader_manager.read(
-        dest, validation=validation,
+        dest,
+        validation=validation,
     )
 
     return data_cleaned_df
+
 
 def write(
     df: pd.DataFrame,
@@ -73,11 +77,12 @@ def write(
         os.makedirs(dest_folder, exist_ok=True)
     else:
         logger.info(f"Directory {dest} already exists.")
-    
+
     table = pa.Table.from_pandas(df)
     pq.write_table(table, dest, compression="snappy")
 
     logger.info(f"Data written to {dest} successfully.")
+
 
 def define_schema(
     df: pd.DataFrame,
@@ -86,8 +91,9 @@ def define_schema(
 ) -> JsonMapping:
     sch = wr.catalog.extract_athena_types(df)
     if camel_case:
-        sch = { _camel(k): v for k, v in sch.items() }
+        sch = {_camel(k): v for k, v in sch.items()}
     return sch
+
 
 # ──────────────────────────────────────────────────────────
 def _camel(s: str) -> str:
@@ -96,51 +102,50 @@ def _camel(s: str) -> str:
 
 
 def _define_context(
-        filepath: str | None = None,
-        contract_definition: TypedDataFrame | None = None,
-        pre_transformations: list[any] | None = [],
-        post_transformations: list[any] | None = [],
-    )-> str:
-        """
-        Return a string representation of the current configuration.
-        """
-        logger.info(f"Defining context with filepath: {filepath}, ")
-        if not filepath:
-            raise ValueError("Filepath must be provided.")
-        
-        helper_reader1 = HelperReader()
-        helper_reader1.bucket_name = ""
-        helper_reader1.path_filename = filepath
-        helper_reader1.filename = filepath.split("/")[-1]
-        helper_reader1.extfile = filepath.split(".")[-1]
-        helper_reader1.filter_file = filepath.split(".")[-1]
-        helper_reader1.contract = contract_definition
+    filepath: str | None = None,
+    contract_definition: TypedDataFrame | None = None,
+    pre_transformations: list[any] | None = [],
+    post_transformations: list[any] | None = [],
+) -> str:
+    """
+    Return a string representation of the current configuration.
+    """
+    logger.info(f"Defining context with filepath: {filepath}, ")
+    if not filepath:
+        raise ValueError("Filepath must be provided.")
 
-        # s3_path_to_read1 = helper_reader1.build_input_to_read()
+    helper_reader1 = HelperReader()
+    helper_reader1.bucket_name = ""
+    helper_reader1.path_filename = filepath
+    helper_reader1.filename = filepath.split("/")[-1]
+    helper_reader1.extfile = filepath.split(".")[-1]
+    helper_reader1.filter_file = filepath.split(".")[-1]
+    helper_reader1.contract = contract_definition
 
-        reader_file1 = helper_reader1.choice_handler("local")
+    # s3_path_to_read1 = helper_reader1.build_input_to_read()
 
-        logger.info(f"Reader file component : {reader_file1.__class__}")
+    reader_file1 = helper_reader1.choice_handler("local")
 
-        logger.info(f"Reader file component : {reader_file1.__dict__}")
+    logger.info(f"Reader file component : {reader_file1.__class__}")
 
-        logger.info("Hooks to be added:")
-        logger.info(f"Pre-transformations: {pre_transformations}")
-        logger.info(f"Post-transformations: {post_transformations}")
+    logger.info(f"Reader file component : {reader_file1.__dict__}")
 
+    logger.info("Hooks to be added:")
+    logger.info(f"Pre-transformations: {pre_transformations}")
+    logger.info(f"Post-transformations: {post_transformations}")
 
+    if not pre_transformations:
+        logger.info("No pre-transformations to add.")
+    else:
+        logger.info(f"Adding pre-transformations: {pre_transformations}")
+        [reader_file1.add_pre_hook(hook_custom) for hook_custom in pre_transformations]
+    if not post_transformations:
+        logger.info("No post-transformations to add.")
+    else:
+        logger.info(f"Adding post-transformations: {post_transformations}")
+        [
+            reader_file1.add_post_hook(hook_custom)
+            for hook_custom in post_transformations
+        ]
 
-        if not pre_transformations:
-            logger.info("No pre-transformations to add.")
-        else:
-            logger.info(f"Adding pre-transformations: {pre_transformations}")
-            [reader_file1.add_pre_hook(hook_custom)\
-             for hook_custom in pre_transformations]
-        if not post_transformations:
-            logger.info("No post-transformations to add.")
-        else:
-            logger.info(f"Adding post-transformations: {post_transformations}")
-            [reader_file1.add_post_hook(hook_custom) \
-                    for hook_custom in post_transformations]
-
-        return reader_file1
+    return reader_file1

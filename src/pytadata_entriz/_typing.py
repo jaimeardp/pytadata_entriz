@@ -7,5 +7,4 @@ WriteMode = Literal["append", "overwrite", "replace"]
 JsonMapping = MutableMapping[str, Any]
 Kwargs = Mapping[str, Any]
 
-DataFrame = pd.DataFrame          # alias only for Protocol declaration
-
+DataFrame = pd.DataFrame  # alias only for Protocol declaration

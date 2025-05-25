@@ -19,19 +19,20 @@ class CsvGCPFile(AbstractFile):
     def _read_impl_without_validation_schema(
         self, s3_path, skiprows=None, usecols=None, reader_behavior="all", **kwargs
     ) -> pd.DataFrame:
-        print(f"skiprows {skiprows}, usecols {usecols}, kwargs {kwargs}, reader_behavior {reader_behavior}")
+        print(
+            f"skiprows {skiprows}, usecols {usecols}, kwargs {kwargs}, reader_behavior {reader_behavior}"
+        )
         if reader_behavior == "all":
             df = wr.s3.read_csv(s3_path, skiprows=skiprows, usecols=usecols, **kwargs)
         elif reader_behavior == "one":
             df = self._read_core_process(
                 s3_path, skiprows=skiprows, usecols=usecols, **kwargs
-            ) 
+            )
         return df
-    
+
     def _read_core_process(
         self, s3_path, sheet_name=0, skiprows=None, usecols=None, **kwargs
     ) -> pd.DataFrame:
-
         try:
             if (
                 isinstance(s3_path, list) and sheet_name == 0
@@ -46,30 +47,39 @@ class CsvGCPFile(AbstractFile):
                     #     usecols=usecols,
                     #     **kwargs,
                     # )
-                    for chunk in wr.s3.read_csv(path, skiprows=skiprows, usecols=usecols,\
-                                                 chunksize=CHUNKSIZE,
-                                                 **kwargs):
+                    for chunk in wr.s3.read_csv(
+                        path,
+                        skiprows=skiprows,
+                        usecols=usecols,
+                        chunksize=CHUNKSIZE,
+                        **kwargs,
+                    ):
                         chunk["filename"] = filename_relative
                         out.append(chunk)
                         # columns = list(chunk.columns)
-                        #map each column except the first like float64
+                        # map each column except the first like float64
                         # for col in columns[1:]:
                         #     chunk[col] = chunk[col].str.replace(',', '.').astype("float64")
                         print(f"{ind} dataframe - {chunk.shape}")
                         # print(f" Info Memory Usage: {chunk.info(memory_usage='deep')}")
-                        print(f"Memory Usage: {chunk.memory_usage(deep=True).sum() / 1024 ** 2} MB")
+                        print(
+                            f"Memory Usage: {chunk.memory_usage(deep=True).sum() / 1024**2} MB"
+                        )
                         del chunk
                         gc.collect()
                     # out.append(data)
                     # data["filename"] = filename_relative
                     # print(f"{ind} dataframe - {data.shape}")
                 output = pd.concat(out, axis=0, ignore_index=True)
-                print(f"Memory Usage: {output.memory_usage(deep=True).sum() / 1024 ** 2} MB")
+                print(
+                    f"Memory Usage: {output.memory_usage(deep=True).sum() / 1024**2} MB"
+                )
                 del out
                 gc.collect()
                 return output
-            elif (
-                isinstance(s3_path, str)):  # read single xlsx file and several sheets if sheet_name is equal to None
+            elif isinstance(
+                s3_path, str
+            ):  # read single xlsx file and several sheets if sheet_name is equal to None
                 return wr.s3.read_csv(
                     s3_path,
                     skiprows=skiprows,
@@ -80,7 +90,7 @@ class CsvGCPFile(AbstractFile):
                 raise NotImplementedError("Invalid type of S3_PATH")
         except Exception as e:
             raise ReadFileException(f"Error reading file {s3_path} - {e}")
-        
+
 
 class ExcelGCPFile(AbstractFile):
     def _read_impl(
@@ -165,4 +175,3 @@ class ExcelGCPFile(AbstractFile):
 
     def _get_sheets_names(self, s3_path):
         raise NotImplementedError
-

@@ -1,4 +1,3 @@
-
 import pandas as pd
 from .base import AbstractFile
 from typedframe import TypedDataFrame
@@ -10,18 +9,17 @@ logger = get_logger(__name__)
 
 class CsvLocalFile(AbstractFile):
     def _read_impl(self, path, skiprows=None, usecols=None, **kwargs) -> pd.DataFrame:
-
         logger.info(
             f"Reading CSV file from {path} with skiprows={skiprows} and usecols={usecols}"
         )
 
-        df = pd.read_csv(
-            path, skiprows=skiprows, usecols=usecols, **kwargs
-        )
+        df = pd.read_csv(path, skiprows=skiprows, usecols=usecols, **kwargs)
 
         logger.info(f"CSV file read successfully, shape: {df.shape}")
 
-        logger.debug(f"Validating CSV file against contract schema: {self.contract_cls.schema}")
+        logger.debug(
+            f"Validating CSV file against contract schema: {self.contract_cls.schema}"
+        )
 
         # df.columns = list(self.contract_cls.schema.keys())
 
@@ -30,9 +28,8 @@ class CsvLocalFile(AbstractFile):
     def _read_impl_without_validation_schema(
         self, path, skiprows=None, usecols=None, **kwargs
     ) -> pd.DataFrame:
-        
         logger.info("No validation schema provided, reading CSV without validation.")
-        
+
         logger.info(
             f"Reading CSV file from {path} with skiprows={skiprows} and usecols={usecols}"
         )

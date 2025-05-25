@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from collections import defaultdict
 import pandas as pd
 
+
 class SchemaDataValidator:
     """
     Validates data against a schema defined in a file.
@@ -13,7 +14,12 @@ class SchemaDataValidator:
     """
 
     # ---------------     constructor and helper methods UNCHANGED     --------------- #
-    def __init__(self, schema_csv_path, input_data_df, logger: logging.Logger,):
+    def __init__(
+        self,
+        schema_csv_path,
+        input_data_df,
+        logger: logging.Logger,
+    ):
         self.schema_csv_path = schema_csv_path
         self.input_data_df = input_data_df
         self.schema_df = None
@@ -90,7 +96,6 @@ class SchemaDataValidator:
             return True
         return isinstance(x, int) and x in [0, 1]
 
-
     # --- Loading Methods ---
     def load_schema(self):
         if not os.path.exists(self.schema_csv_path):
@@ -105,12 +110,9 @@ class SchemaDataValidator:
 
         self.schema_df.rename(columns=lambda c: c.strip(), inplace=True)
 
-        if '¿Obligatorio?' in self.schema_df.columns:
+        if "¿Obligatorio?" in self.schema_df.columns:
             self.schema_df["obligatorio"] = (
-                self.schema_df["¿Obligatorio?"]
-                .astype(str)
-                .str.strip()
-                .str.lower()
+                self.schema_df["¿Obligatorio?"].astype(str).str.strip().str.lower()
                 == "obligatorio"
             )
         else:
@@ -120,10 +122,14 @@ class SchemaDataValidator:
                 "Assuming all columns are optional."
             )
 
-        required_schema_cols = ['Datos', 'Tipo']
+        required_schema_cols = ["Datos", "Tipo"]
         if not all(col in self.schema_df.columns for col in required_schema_cols):
-            missing = [col for col in required_schema_cols if col not in self.schema_df.columns]
-            self.logger.error(f"Schema file {self.schema_csv_path} missing columns: {missing}")
+            missing = [
+                col for col in required_schema_cols if col not in self.schema_df.columns
+            ]
+            self.logger.error(
+                f"Schema file {self.schema_csv_path} missing columns: {missing}"
+            )
             raise ValueError(
                 f"Schema file {self.schema_csv_path} must contain columns: {required_schema_cols}. Missing: {missing}"
             )
@@ -144,10 +150,9 @@ class SchemaDataValidator:
             )
 
     def _collect_errors(self, mask, serie, col, tpo, problema, validacion):
-
         return [
             {
-                "fila": idx,                       # 0-based (report adds +1 later)
+                "fila": idx,  # 0-based (report adds +1 later)
                 "columna": col,
                 "valor": val,
                 "problema": problema,
@@ -157,19 +162,19 @@ class SchemaDataValidator:
             }
             for idx, val in serie[mask].items()
         ]
-    # -----------------------------------------------------------------------
 
+    # -----------------------------------------------------------------------
 
     def validate(self):
         """
-        Vectorised 
+        Vectorised
         """
         if self.schema_df is None:
             raise ValueError("Schema not loaded. Call load_schema() first.")
         if self.data_df is None:
             raise ValueError("Data not loaded. Call load_data() first.")
 
-        self.errors: list[dict] = []          # reset
+        self.errors: list[dict] = []  # reset
 
         for _, regla in self.schema_df.iterrows():
             col = str(regla["Datos"]).strip()
@@ -241,8 +246,9 @@ class SchemaDataValidator:
                         "Tipo de Dato",
                     )
                 )
-        self.logger.info(f"Validation completed. Found {len(self.errors)} potential issues.")
-
+        self.logger.info(
+            f"Validation completed. Found {len(self.errors)} potential issues."
+        )
 
     # --- Reporting Methods ---
     def get_report_dataframe(self, enable_err_details: bool = False):
@@ -256,56 +262,93 @@ class SchemaDataValidator:
                               during setup/loading.
         """
         if not self.errors:
-            return pd.DataFrame(columns=[
-                "fila", "columna", "valor", "problema",
-                "tipo_esperado", "tipo_encontrado", "validacion"
-            ])
+            return pd.DataFrame(
+                columns=[
+                    "fila",
+                    "columna",
+                    "valor",
+                    "problema",
+                    "tipo_esperado",
+                    "tipo_encontrado",
+                    "validacion",
+                ]
+            )
 
         collapsed_complete = self._collapse_errors(self.errors)
 
-        self.logger.info(f"Collapsing errors into {len(collapsed_complete)} unique issues.")
-        
-        df_complete = pd.DataFrame(collapsed_complete)\
-            .sort_values(["fila", "columna"], na_position="first")\
+        self.logger.info(
+            f"Collapsing errors into {len(collapsed_complete)} unique issues."
+        )
+
+        df_complete = (
+            pd.DataFrame(collapsed_complete)
+            .sort_values(["fila", "columna"], na_position="first")
             .reset_index(drop=True)
+        )
 
         return df_complete
 
-
     # --- Main Execution Method ---
-    def run_validation_and_report(self, enable_err_details= False, ):
+    def run_validation_and_report(
+        self,
+        enable_err_details=False,
+    ):
         try:
             start_time = datetime.now()
             self.load_schema()
             self.load_data()
             start_time = datetime.now()
             self.logger.info(f"Validation process detect started at {start_time}.")
-            self.validate() # This is the optimized part
+            self.validate()  # This is the optimized part
             end_time = datetime.now()
-            self.logger.info(f"Validation process detect started at {end_time - start_time}.")
+            self.logger.info(
+                f"Validation process detect started at {end_time - start_time}."
+            )
             start_time = datetime.now()
             self.logger.info(f"Validation process group end at {start_time}.")
             report_df = self.get_report_dataframe(enable_err_details)
             end_time = datetime.now()
-            self.logger.info(f"Validation process group end at {end_time - start_time}.")
-            
+            self.logger.info(
+                f"Validation process group end at {end_time - start_time}."
+            )
+
             duration = end_time - start_time
-            
-            self.logger.info(f"Validation process finished. Report has {report_df.shape[0]} rows. Time taken: {duration}")
-            
+
+            self.logger.info(
+                f"Validation process finished. Report has {report_df.shape[0]} rows. Time taken: {duration}"
+            )
+
             return report_df
         except (FileNotFoundError, ValueError, IOError) as e:
-            self.logger.error(f"A known error occurred during validation setup or loading: {e}")
-            return pd.DataFrame(columns=[
-                "fila", "columna", "valor", "problema",
-                "tipo_esperado", "tipo_encontrado", "validacion"
-            ])
+            self.logger.error(
+                f"A known error occurred during validation setup or loading: {e}"
+            )
+            return pd.DataFrame(
+                columns=[
+                    "fila",
+                    "columna",
+                    "valor",
+                    "problema",
+                    "tipo_esperado",
+                    "tipo_encontrado",
+                    "validacion",
+                ]
+            )
         except Exception:
-            self.logger.exception("An unexpected error occurred during validation:") # .exception logs stack trace
-            return pd.DataFrame(columns=[
-                "fila", "columna", "valor", "problema",
-                "tipo_esperado", "tipo_encontrado", "validacion"
-            ])
+            self.logger.exception(
+                "An unexpected error occurred during validation:"
+            )  # .exception logs stack trace
+            return pd.DataFrame(
+                columns=[
+                    "fila",
+                    "columna",
+                    "valor",
+                    "problema",
+                    "tipo_esperado",
+                    "tipo_encontrado",
+                    "validacion",
+                ]
+            )
 
     def _collapse_errors(self, error_dicts):
         """
@@ -316,13 +359,15 @@ class SchemaDataValidator:
         -------
         list[dict]  one dict per unique (fila, columna)
         """
-        merged = defaultdict(lambda: {
-            "valor": None,
-            "problema": set(),
-            "tipo_esperado": None,
-            "tipo_encontrado": None,
-            "validacion": set(),
-        })
+        merged = defaultdict(
+            lambda: {
+                "valor": None,
+                "problema": set(),
+                "tipo_esperado": None,
+                "tipo_encontrado": None,
+                "validacion": set(),
+            }
+        )
 
         for err in error_dicts:
             key = (err["fila"], err["columna"])
@@ -341,13 +386,15 @@ class SchemaDataValidator:
         # flatten sets into the original pipe-joined strings
         result = []
         for (fila, columna), data in merged.items():
-            result.append({
-                "fila": None if fila is None else fila + 1,  # +1 for human rows
-                "columna": columna,
-                "valor": data["valor"],
-                "problema": " | ".join(sorted(data["problema"])),
-                "tipo_esperado": data["tipo_esperado"],
-                "tipo_encontrado": data["tipo_encontrado"],
-                "validacion": " | ".join(sorted(data["validacion"])),
-            })
+            result.append(
+                {
+                    "fila": None if fila is None else fila + 1,  # +1 for human rows
+                    "columna": columna,
+                    "valor": data["valor"],
+                    "problema": " | ".join(sorted(data["problema"])),
+                    "tipo_esperado": data["tipo_esperado"],
+                    "tipo_encontrado": data["tipo_encontrado"],
+                    "validacion": " | ".join(sorted(data["validacion"])),
+                }
+            )
         return result

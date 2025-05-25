@@ -113,7 +113,7 @@ class CsvCloudFile(AbstractFile):
                         print(f"{ind} dataframe - {chunk.shape}")
                         # print(f" Info Memory Usage: {chunk.info(memory_usage='deep')}")
                         print(
-                            f"Memory Usage: {chunk.memory_usage(deep=True).sum() / 1024 ** 2} MB"
+                            f"Memory Usage: {chunk.memory_usage(deep=True).sum() / 1024**2} MB"
                         )
                         del chunk
                         gc.collect()
@@ -122,7 +122,7 @@ class CsvCloudFile(AbstractFile):
                     # print(f"{ind} dataframe - {data.shape}")
                 output = pd.concat(out, axis=0, ignore_index=True)
                 print(
-                    f"Memory Usage: {output.memory_usage(deep=True).sum() / 1024 ** 2} MB"
+                    f"Memory Usage: {output.memory_usage(deep=True).sum() / 1024**2} MB"
                 )
                 del out
                 gc.collect()

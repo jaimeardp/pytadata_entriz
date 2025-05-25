@@ -18,6 +18,7 @@ from .object_factory import ObjectFactory
 
 from .logger import get_logger
 
+
 class HelperReader(ReaderFile):
     """
     Helper class to read files from local or cloud provider.
@@ -34,10 +35,12 @@ class HelperReader(ReaderFile):
     :type extfile: str
     :param contract: The contract to use to read the file.
     :type contract: TypedDataFrame
-    
-    """
-    def __init__(self, ) -> None:
 
+    """
+
+    def __init__(
+        self,
+    ) -> None:
         self.logger = get_logger(__name__)
 
         self._file_factory: ObjectFactory = ObjectFactory()
@@ -62,12 +65,19 @@ class HelperReader(ReaderFile):
         file_factory.register_builder("CsvGCP", CsvLocalFile)
         file_factory.register_builder("ExcelGCP", ExcelLocalFile)
 
-    def choice_handler(self, provider) -> Union[CsvCloudFile, ExcelCloudFile,\
-                                                 CsvGCPFile, ExcelGCPFile, \
-                                                 CsvLocalFile, ExcelLocalFile] :
+    def choice_handler(
+        self, provider
+    ) -> Union[
+        CsvCloudFile,
+        ExcelCloudFile,
+        CsvGCPFile,
+        ExcelGCPFile,
+        CsvLocalFile,
+        ExcelLocalFile,
+    ]:
         """
         This function determines the type of file and returns the appropriate reader object.
-        
+
         :raise Exception: If the filename containe invalid extension.
         :return: he appropriate reader object based on the file type..
         :rtype: Union[CsvCloudFile, ExcelCloudFile, DatCloudFile]

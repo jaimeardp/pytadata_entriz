@@ -8,7 +8,9 @@ from typedframe import TypedDataFrame
 
 
 from .logger import get_logger
+
 logger = get_logger(__name__)
+
 
 class AbstractFile:
     def __init__(self, contract_cls: Type[TypedDataFrame]):
@@ -25,7 +27,11 @@ class AbstractFile:
     def read(self, path_or_key, validation=True, **kwargs) -> pd.DataFrame:
         # Call all pre-processing hooks
 
-        logger.info("Starting read method with validation {} and config {}".format(validation, kwargs ))
+        logger.info(
+            "Starting read method with validation {} and config {}".format(
+                validation, kwargs
+            )
+        )
 
         logger.info("Hooks pre-processing called {}".format(self.pre_hooks))
 
@@ -42,7 +48,6 @@ class AbstractFile:
 
         logger.info("Hooks post-processing called {}".format(self.post_hooks))
 
-
         # Call all post-processing hooks
         for hook in self.post_hooks:
             modified_data = hook(data, self.contract_cls)
@@ -56,6 +61,7 @@ class AbstractFile:
 
     def _read_impl_without_validation_schema(self, path_or_key, **kwargs):
         raise NotImplementedError
+
 
 class ReadFileException(Exception):
     pass
@@ -141,7 +147,6 @@ class HelperSysPaths:
 
     @staticmethod
     def build_path_filename(filename_path: str, filename: StopIteration = None) -> str:
-
         sep_path = HelperSysPaths().__detect_system()
 
         filename_path = filename_path.replace("/", sep_path)
@@ -180,13 +185,15 @@ class HelperSysPaths:
             s3.head_object(Bucket=bucket, Key=key)
             return True
         except botocore.exceptions.ClientError as e:
-            error_code = int(e.response['Error']['Code'])
+            error_code = int(e.response["Error"]["Code"])
             if error_code == 403:
                 raise Exception(f"Access denied for bucket: {bucket} and key: {key}")
             elif error_code == 404:
                 return False
             else:
-                raise Exception(f"Error unknow: {str(e)} in bucket: {bucket} and key: {key}")
+                raise Exception(
+                    f"Error unknow: {str(e)} in bucket: {bucket} and key: {key}"
+                )
 
     @staticmethod
     def is_s3_prefix(s3, bucket: str, prefix: str) -> bool:
@@ -197,7 +204,9 @@ class HelperSysPaths:
         return "Contents" in response or "CommonPrefixes" in response
 
     @staticmethod
-    def to_list_files(s3, bucket_name: str, folder_path: str, filter_file:str=None) -> list:
+    def to_list_files(
+        s3, bucket_name: str, folder_path: str, filter_file: str = None
+    ) -> list:
         output = []
         time.sleep(60)
         response = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_path)
@@ -206,6 +215,12 @@ class HelperSysPaths:
             output.append(obj["Key"])
 
         if filter_file:
-            output = list(filter(lambda x: x.endswith(filter_file.lower()) or x.endswith(filter_file.upper()), output))
+            output = list(
+                filter(
+                    lambda x: x.endswith(filter_file.lower())
+                    or x.endswith(filter_file.upper()),
+                    output,
+                )
+            )
 
         return output
