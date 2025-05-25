@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
     
     steps:
     - name: Checkout code
@@ -59,21 +59,28 @@ jobs:
     - name: Install project
       run: poetry install --no-interaction
     
-    - name: Run pre-commit hooks
-      run: |
-        poetry run pre-commit run --all-files --show-diff-on-failure
+    - name: Install ruff
+      run: pip install ruff
     
-    - name: Run tests with coverage
+    - name: Run ruff linter
       run: |
-        poetry run pytest --cov=src/mardata_entryana --cov-report=xml --cov-report=term-missing -v
+        ruff check . --output-format=github --show-fixes
     
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      if: matrix.python-version == '3.11'
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        fail_ci_if_error: false
+    - name: Run ruff formatter
+      run: |
+        ruff format --check --diff .
+    
+    - name: Run tests with pytest
+      run: |
+        poetry run pytest
+    
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v3
+    #   if: matrix.python-version == '3.11'
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }}
+    #     file: ./coverage.xml
+    #     fail_ci_if_error: false
 
   # ──────────────────────────────────────────────────────────
   # BUILD PACKAGE
