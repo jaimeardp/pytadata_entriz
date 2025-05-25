@@ -89,7 +89,7 @@ jobs:
       if: matrix.python-version == '3.11'
       run: |
         echo "🔍 Running type checks..."
-        poetry run mypy src/mardata_entryana --show-error-codes || true
+        poetry run mypy src/pytadata_entriz --show-error-codes || true
     
     - name: Run tests
       run: |
@@ -136,7 +136,7 @@ jobs:
         
         echo "🧪 Testing package installation..."
         pip install dist/*.whl
-        python -c "import mardata_entryana; print('✅ Package imports successfully')"
+        python -c "import pytadata_entriz; print('✅ Package imports successfully')"
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -250,7 +250,7 @@ jobs:
         
         python -c "
         try:
-            import mardata_entryana
+            import pytadata_entriz
             print('✅ Package structure validation passed!')
         except Exception as e:
             print(f'⚠️ Import test inconclusive: {e}')
@@ -280,7 +280,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             commit_sha: context.sha,
-            body: `## ${config.emoji} ${{ env.ENVIRONMENT }} Deployment\n\n**Status:** ✅ Successfully deployed\n**Version:** \`${{ env.DEPLOY_VERSION }}\`\n**Environment:** ${{ env.ENVIRONMENT }}\n**Branch:** \`${{ github.ref_name }}\`\n**Purpose:** ${config.purpose}\n\n### 📥 Installation\n\`\`\`bash\n# Install from TestPyPI (structure validation)\npip install -i https://test.pypi.org/simple/ --no-deps mardata-entryana==${{ env.DEPLOY_VERSION }}\n\n# Or with mixed indexes (may have dependency issues)\npip install --extra-index-url https://test.pypi.org/simple/ mardata-entryana==${{ env.DEPLOY_VERSION }}\n\`\`\`\n\n### 🧪 Quick Test\n\`\`\`python\nimport mardata_entryana\nprint("Package loaded successfully!")\n\`\`\`\n\n### 🔗 Links\n- [TestPyPI Package](https://test.pypi.org/project/mardata-entryana/${{ env.DEPLOY_VERSION }}/)\n- [Build Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n### 📋 Next Steps\n${config.nextStep}\n\n---\n*🤖 Automated deployment from ${{ github.ref_name }} branch*`
+            body: `## ${config.emoji} ${{ env.ENVIRONMENT }} Deployment\n\n**Status:** ✅ Successfully deployed\n**Version:** \`${{ env.DEPLOY_VERSION }}\`\n**Environment:** ${{ env.ENVIRONMENT }}\n**Branch:** \`${{ github.ref_name }}\`\n**Purpose:** ${config.purpose}\n\n### 📥 Installation\n\`\`\`bash\n# Install from TestPyPI (structure validation)\npip install -i https://test.pypi.org/simple/ --no-deps mardata-entryana==${{ env.DEPLOY_VERSION }}\n\n# Or with mixed indexes (may have dependency issues)\npip install --extra-index-url https://test.pypi.org/simple/ mardata-entryana==${{ env.DEPLOY_VERSION }}\n\`\`\`\n\n### 🧪 Quick Test\n\`\`\`python\nimport pytadata_entriz\nprint("Package loaded successfully!")\n\`\`\`\n\n### 🔗 Links\n- [TestPyPI Package](https://test.pypi.org/project/mardata-entryana/${{ env.DEPLOY_VERSION }}/)\n- [Build Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n### 📋 Next Steps\n${config.nextStep}\n\n---\n*🤖 Automated deployment from ${{ github.ref_name }} branch*`
           })
 
     outputs:
@@ -384,7 +384,7 @@ jobs:
         
         echo "🔍 Verifying production deployment..."
         pip install mardata-entryana==${{ env.RELEASE_VERSION }}
-        python -c "import mardata_entryana; print(f'✅ Production release ${{ env.RELEASE_VERSION }} verified!')"
+        python -c "import pytadata_entriz; print(f'✅ Production release ${{ env.RELEASE_VERSION }} verified!')"
     
     - name: Update release with deployment info
       uses: actions/github-script@v7
