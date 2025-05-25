@@ -273,7 +273,7 @@ jobs:
     - name: Run staging tests
       run: |
         echo "⏳ Waiting for staging package..."
-        sleep 60
+        sleep 90
         
         echo "🔍 Installing release candidate..."
         pip install -i https://test.pypi.org/simple/  --no-deps pytadata_entriz==${{ env.RC_VERSION }}
