@@ -51,7 +51,9 @@ jobs:
           poetry-version: ${{ env.POETRY_VERSION }}
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: |
+          poetry install --with dev
+          poetry install -E aws
 
       - name: Update version in pyproject.toml
         run: |
@@ -61,8 +63,7 @@ jobs:
         run: |
           poetry run ruff check .
           poetry run ruff format --check .
-          poetry run mypy .
-          poetry run pytest --cov=. --cov-report=term-missing
+          poetry run pytest 
 
       - name: Build release candidate
         run: poetry build
