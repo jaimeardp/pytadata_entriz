@@ -1,0 +1,118 @@
+# .github/workflows/release.yml
+name: Release Branch CI
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+env:
+  POETRY_VERSION: "2.1.3"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  validate-release:
+    name: Validate Release Branch
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Validate semantic version
+        run: |
+          VERSION=${{ steps.extract_version.outputs.version }}
+          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid semantic version format: $VERSION"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Update version in pyproject.toml
+        run: |
+          poetry version ${{ steps.extract_version.outputs.version }}
+
+      - name: Run full test suite
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check .
+          poetry run mypy .
+          poetry run pytest --cov=. --cov-report=term-missing
+
+      - name: Build release candidate
+        run: poetry build
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-${{ steps.extract_version.outputs.version }}
+          path: dist/
+
+  create-release-candidate:
+    name: Create Release Candidate
+    runs-on: ubuntu-latest
+    needs: validate-release
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF}
+          VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+          RC_VERSION="${VERSION}-rc.${GITHUB_RUN_NUMBER}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "rc_version=$RC_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate-${{ steps.extract_version.outputs.version }}
+          path: dist/
+
+      - name: Create pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.extract_version.outputs.rc_version }}
+          name: Release Candidate v${{ steps.extract_version.outputs.rc_version }}
+          body: |
+            🚀 Release Candidate for v${{ steps.extract_version.outputs.version }}
+            
+            This is a pre-release version for testing purposes.
+            
+            **Changes in this release:**
+            - Auto-generated from release branch
+            
+            **Testing:**
+            Please test this release candidate before approving the merge to main.
+          files: dist/*
+          prerelease: true
+          draft: false

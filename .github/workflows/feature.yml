@@ -1,0 +1,75 @@
+# .github/workflows/feature.yml
+name: Feature Branch CI
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'hotfix/**'
+      - 'bugfix/**'
+  pull_request:
+    branches: [develop]
+
+env:
+  POETRY_VERSION: "2.1.3"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  validate:
+    name: Validate Feature
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-feature-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            venv-feature-
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run quick linting
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check .
+
+      - name: Run tests
+        run: poetry run pytest -x --tb=short
+
+      - name: Build package (validation)
+        run: poetry build
+
+  conventional-commits:
+    name: Check Conventional Commits
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Conventional Commits
+        uses: webiny/action-conventional-commits@v1.3.0
