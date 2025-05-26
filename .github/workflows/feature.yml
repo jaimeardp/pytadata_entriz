@@ -47,7 +47,9 @@ jobs:
             venv-feature-
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: | 
+          poetry install --with dev
+          poetry install -E aws
 
       - name: Run quick linting
         run: |
