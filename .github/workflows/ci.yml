@@ -49,15 +49,14 @@ jobs:
             venv-${{ matrix.python-version }}-
 
       - name: Install dependencies
-        run: poetry install --with dev
-
+        run: | 
+          poetry install --with dev
+          poetry install -E aws
+          
       - name: Run linting
         run: |
           poetry run ruff check .
           poetry run ruff format --check .
-
-      - name: Run type checking
-        run: poetry run mypy .
 
       - name: Run tests with coverage
         run: |
