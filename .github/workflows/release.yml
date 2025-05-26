@@ -117,3 +117,5 @@ jobs:
           files: dist/*
           prerelease: true
           draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
