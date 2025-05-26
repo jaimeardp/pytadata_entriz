@@ -50,7 +50,9 @@ jobs:
             venv-${{ matrix.python-version }}-
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: |
+          poetry install --with dev
+          poetry install -E aws
 
       - name: Run linting
         run: |
