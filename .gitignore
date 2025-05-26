@@ -48,3 +48,5 @@ coverage.xml
 .ruff_cache/
 # Virtual environment
 venv/
+
+home/

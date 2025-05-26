@@ -7,3 +7,5 @@ from .data_entry import DataEntry
 
 __all__ = ["DataEntry", "__version__"]
 __version__: str = _v(__name__)
+
+# Ensure that the package is importable
