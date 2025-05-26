@@ -20,7 +20,7 @@ from .common.validator import SchemaDataValidator
 
 class DataEntry:
     """
-    Write a **pandas.DataFrame** to the configured destination (S3 or BigQuery).
+    Write a **pandas.DataFrame** to the configured destination (S3, BigQuery).
 
     Parameters
     ----------
